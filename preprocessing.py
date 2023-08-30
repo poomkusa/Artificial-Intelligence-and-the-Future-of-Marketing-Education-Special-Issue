@@ -61,7 +61,7 @@ data = data[data['text'].str.contains(pat, case=False)]
 #temp2 = temp1['text'].value_counts()
 #data["user+text"] = data["user_name"] + data["text"]
 #temp = data['user+text'].value_counts()
-#data = data.drop_duplicates(subset=['user_name', 'text', 'date'], keep='first')
+data = data.drop_duplicates(subset=['text'], keep='first')
 # https://github.com/google-research/deduplicate-text-datasets
 # https://github.com/cardiffnlp/timelms/blob/main/scripts/preprocess.py
 def hash_tweet(tweet, num_perm=16):
@@ -79,16 +79,13 @@ def hash_tweet(tweet, num_perm=16):
     return minhash(tokens)
 written_hashes = set()
 data['duplicate'] = False
-for index in range(len(data)):
-  tweet_hash = hash_tweet(data['text'].iloc[index])
-  if tweet_hash in written_hashes:
-    data['duplicate'].iloc[index] = True
-  else: data['duplicate'].iloc[index] = False
-  if not data['duplicate'].iloc[index]:
-    written_hashes.add(tweet_hash)
-
-    
-
+# for index in range(len(data)):
+#   tweet_hash = hash_tweet(data['text'].iloc[index])
+#   if tweet_hash in written_hashes:
+#     data['duplicate'].iloc[index] = True
+#   else: data['duplicate'].iloc[index] = False
+#   if not data['duplicate'].iloc[index]:
+#     written_hashes.add(tweet_hash)
 for index in tqdm(range(len(data))):
   tweet_hash = hash_tweet(data['text'].iloc[index])
   if tweet_hash in written_hashes:
