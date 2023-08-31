@@ -87,12 +87,12 @@ data['duplicate'] = False
 #   if not data['duplicate'].iloc[index]:
 #     written_hashes.add(tweet_hash)
 for index in tqdm(range(len(data))):
-  tweet_hash = hash_tweet(data['text'].iloc[index])
-  if tweet_hash in written_hashes:
-    data['duplicate'].iloc[index] = True
-  else: data['duplicate'].iloc[index] = False
-  if not data['duplicate'].iloc[index]:
-    written_hashes.add(tweet_hash)
+    tweet_hash = hash_tweet(data['text'].iloc[index])
+    if tweet_hash in written_hashes:
+        data['duplicate'].iloc[index] = True
+    else: data['duplicate'].iloc[index] = False
+    if not data['duplicate'].iloc[index]:
+        written_hashes.add(tweet_hash)
     
 # occupation
 #preprocessed texts in this column by removing URLs, the hashtag symbol, emojis, stop words,
@@ -110,9 +110,33 @@ data.to_feather("Desktop/tweets_v84.feather")
 # sentiment analysis
 # replacing user handles and URL links with generic placeholders (@user and http)
 # user mentions are replaced with a generic placeholder (@user), except for verified users.
+def clean_text(text):
+    text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')    
+    new_text = []
+    for t in text.split():
+        t = '@user' if t.startswith('@') and len(t) > 1 and t.replace('@','') not in verified_users else t
+        t = 'http' if t.startswith('http') else t
+        new_text.append(t)
+    return ' '.join(new_text)
 
 # topic modeling
-# removing URLs, user handles, and emojis.
+# removing URLs, user handles, and emojis (maybe not).
+def remove_mentions_and_links(text):
+    new_text = []
+    for t in text.split(" "):
+        t = "" if (t.startswith('@') or t.startswith('#') ) and len(t) > 1 else t
+        new_text.append(t)
+
+    new_text = re.sub(r'http\S+', '', " ".join(new_text))
+    return new_text
+from tqdm import tqdm
+# from tqdm.auto import tqdm  # for notebooks
+# from tqdm.notebook import tqdm
+# Create new `pandas` methods which use `tqdm` progress (can use tqdm_gui, optional kwargs, etc.)
+tqdm.pandas()
+# Now you can use `progress_apply` instead of `apply`
+data["prep"] = data.text_rt.progress_apply(remove_mentions_and_links)
+data = data.reset_index(drop=True)
 
 
 
@@ -123,10 +147,45 @@ data.to_feather("Desktop/tweets_v84.feather")
 
 
 
+#https://github.com/cardiffnlp/timelms/blob/main/scripts/preprocess.py
+def clean_text(text):
+    text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')    
+    new_text = []
+    for t in text.split():
+        t = '@user' if t.startswith('@') and len(t) > 1 and t.replace('@','') not in verified_users else t
+        t = 'http' if t.startswith('http') else t
+        new_text.append(t)
+    return ' '.join(new_text)
 
+#https://github.com/twitter-tuebingen/ChatGPT_project/blob/main/code/analysis/Topic%20and%20Sentiment.ipynb
+import re
+def remove_mentions_and_links(text):
+    new_text = []
+    for t in text.split(" "):
+        t = "" if (t.startswith('@') or t.startswith('#') ) and len(t) > 1 else t
+        new_text.append(t)
 
-
-
+    new_text = re.sub(r'http\S+', '', " ".join(new_text))
+    return new_text
+data["prep"] = data.text_rt.apply(remove_mentions_and_links)
+data = data.reset_index(drop=True)
+def basic_preprocessing(texts):
+    texts = texts.str.replace("https:","")
+    texts = texts.str.replace("t.co","")
+    # remove tel and email
+    texts = texts.str.replace("<email>","")
+    texts = texts.str.replace("<tel>","")
+    texts = texts.str.replace("<link>","")
+    texts = [re.sub(r'anon\d*',"",t) for t in texts]
+    # Remove new line characters
+    texts = [re.sub('\s+', ' ', t) for t in texts]
+    # Remove single quotes
+    texts = [re.sub("\'", "", sent) for sent in texts]
+    # remove some punctuation and numbers, emoji
+    texts = [words_only(t.lower()).strip() for t in texts]
+    return texts
+data.prep = basic_preprocessing(data.prep)
+data.prep = data.prep.str.replace("chatgpt","")
 
 
 
