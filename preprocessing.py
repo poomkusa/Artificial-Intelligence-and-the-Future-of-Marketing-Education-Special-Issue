@@ -51,7 +51,8 @@ data = data[data['text'].str.contains('chatgpt', case=False)]
 keep_list = ['school','college','university','education','student','teacher','learning'\
              ,'curriculum','class','exam','homework','teaching','academia','academic']
 pat = '|'.join(r"\b{}\b".format(x) for x in keep_list)
-data = data[data['text'].str.contains(pat, case=False)]
+data = data[data['text'].str.contains(pat, case=False)] #\b to avoid match cat in words bobcat is nice, matching cat is nice
+#data = data[data['text'].str.contains('school|college|university|education|student|teacher|learning|curriculum|class|exam|homework|teaching|academia|academic', case=False)]
 
 # remove duplicates & near duplicates (We find near-duplicates by hashing the texts of tweets after lowercasing and stripping
 # punctuation. Hashing is performed using MinHash (Broder, 1997), with 16 permutations.)
