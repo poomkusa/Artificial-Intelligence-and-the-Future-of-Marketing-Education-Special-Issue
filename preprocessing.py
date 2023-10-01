@@ -13,7 +13,7 @@ import xxhash
 from tqdm import tqdm
 
 #data = pd.read_csv('G:/My Drive/shared_folder/paper/tweets_v84.csv')
-data = pd.read_csv('/home/poom/Desktop/tweets_v84.csv')
+data = pd.read_csv('/home/poom/Desktop/tweets_v172.csv')
 #temp = data.head(100)
 #data.dtypes
 
@@ -47,11 +47,13 @@ data = data.drop(['bot'], axis=1)
 
 # filter for tweets with education word
 #temp = data[-data['text'].str.lower().str.contains('chatgpt')]
-data = data[data['text'].str.contains('chatgpt', case=False)]
+# data = data[data['text'].str.contains('chatgpt', case=False)]
 keep_list = ['school','college','university','education','student','teacher','learning'\
              ,'curriculum','class','exam','homework','teaching','academia','academic']
 pat = '|'.join(r"\b{}\b".format(x) for x in keep_list)
 data = data[data['text'].str.contains(pat, case=False)] #\b to avoid match cat in words bobcat is nice, matching cat is nice
+# data = data[data["text"].str.contains("|".join(keep_list), case=False)]
+data = data[data["text"].apply(lambda x: any(k in x for k in keep_list))]
 #data = data[data['text'].str.contains('school|college|university|education|student|teacher|learning|curriculum|class|exam|homework|teaching|academia|academic', case=False)]
 
 # remove duplicates & near duplicates (We find near-duplicates by hashing the texts of tweets after lowercasing and stripping
@@ -107,7 +109,8 @@ for index in tqdm(range(len(data))):
 
 
 
-data.to_feather("Desktop/tweets_v84.feather")
+# data.reset_index(drop=True).to_feather("/home/poom/Desktop/tweets_v172_cleaned.csv")
+data.to_csv('/home/poom/Desktop/tweets_v172_cleaned_v3.csv', index=False)
 # sentiment analysis
 # replacing user handles and URL links with generic placeholders (@user and http)
 # user mentions are replaced with a generic placeholder (@user), except for verified users.
