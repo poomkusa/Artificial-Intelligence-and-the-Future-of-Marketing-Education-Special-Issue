@@ -53,7 +53,7 @@ keep_list = ['school','college','university','education','student','teacher','le
 pat = '|'.join(r"\b{}\b".format(x) for x in keep_list)
 data = data[data['text'].str.contains(pat, case=False)] #\b to avoid match cat in words bobcat is nice, matching cat is nice
 # data = data[data["text"].str.contains("|".join(keep_list), case=False)]
-data = data[data["text"].apply(lambda x: any(k in x for k in keep_list))]
+# data = data[data["text"].apply(lambda x: any(k in x for k in keep_list))]
 #data = data[data['text'].str.contains('school|college|university|education|student|teacher|learning|curriculum|class|exam|homework|teaching|academia|academic', case=False)]
 
 # remove duplicates & near duplicates (We find near-duplicates by hashing the texts of tweets after lowercasing and stripping
@@ -128,18 +128,19 @@ def clean_text(text):
 def remove_mentions_and_links(text):
     new_text = []
     for t in text.split(" "):
-        t = "" if (t.startswith('@') or t.startswith('#') ) and len(t) > 1 else t
+        t = "" if (t.startswith('@')) and len(t) > 1 else t
         new_text.append(t)
 
     new_text = re.sub(r'http\S+', '', " ".join(new_text))
     return new_text
 from tqdm import tqdm
+import re
 # from tqdm.auto import tqdm  # for notebooks
 # from tqdm.notebook import tqdm
 # Create new `pandas` methods which use `tqdm` progress (can use tqdm_gui, optional kwargs, etc.)
 tqdm.pandas()
 # Now you can use `progress_apply` instead of `apply`
-data["prep"] = data.text_rt.progress_apply(remove_mentions_and_links)
+data["prep"] = data.text.progress_apply(remove_mentions_and_links)
 data = data.reset_index(drop=True)
 
 
