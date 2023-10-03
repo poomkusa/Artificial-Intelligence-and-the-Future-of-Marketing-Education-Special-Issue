@@ -12,8 +12,9 @@ from datasketch import MinHash, LeanMinHash
 import xxhash
 from tqdm import tqdm
 
-#data = pd.read_csv('G:/My Drive/shared_folder/paper/tweets_v84.csv')
-data = pd.read_csv('/home/poom/Desktop/tweets_v172.csv')
+data = pd.read_csv('C:/Users/Poom/Desktop/tweets_v172_cleaned.csv')
+# data = pd.read_csv('G:/My Drive/shared_folder/paper/tweets_v172.csv')
+# data = pd.read_csv('/home/poom/Desktop/tweets_v172.csv')
 #temp = data.head(100)
 #data.dtypes
 
@@ -25,13 +26,13 @@ data = pd.read_csv('/home/poom/Desktop/tweets_v172.csv')
 data = data[~data['text'].isnull()]
 
 # describe each column
-#for (columnName, columnData) in data.iteritems():
-#    series_value = pd.Series(columnData.values)
-#    print('====================================================================')
-#    print('Colunm Name : ', columnName)
-#    print('Type: ', type(columnData.values[0]))
-#    print(series_value.describe())
-#    print('number of nan', series_value.isnull().sum())
+# for (columnName, columnData) in data.iteritems():
+#     series_value = pd.Series(columnData.values)
+#     print('====================================================================')
+#     print('Colunm Name : ', columnName)
+#     print('Type: ', type(columnData.values[0]))
+#     print(series_value.describe())
+#     print('number of nan', series_value.isnull().sum())
 
 # remove bot (top 1% tweets)
 top_users = data['user_name'].value_counts().rename_axis('user_name').reset_index(name='counts')
@@ -102,6 +103,7 @@ for index in tqdm(range(len(data))):
 #digits, and punctuations, as well as expanding abbreviations, expanding contractions, applying low-
 #ercase, and applying lemmatization. We eventually obtained unigrams and bigrams of the preprocessed
 #texts which are used for matching the occupationl ist.
+#maybe do only teacher, tech job, student, others
 
 
 
@@ -111,9 +113,15 @@ for index in tqdm(range(len(data))):
 
 # data.reset_index(drop=True).to_feather("/home/poom/Desktop/tweets_v172_cleaned.csv")
 data.to_csv('/home/poom/Desktop/tweets_v172_cleaned_v3.csv', index=False)
+
+
+
+
 # sentiment analysis
 # replacing user handles and URL links with generic placeholders (@user and http)
 # user mentions are replaced with a generic placeholder (@user), except for verified users.
+from tqdm import tqdm
+import re
 def clean_text(text):
     text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')    
     new_text = []
@@ -122,10 +130,17 @@ def clean_text(text):
         t = 'http' if t.startswith('http') else t
         new_text.append(t)
     return ' '.join(new_text)
+verified_users = set(open("C:/Users/Poom/Desktop/verified_users.v091122.txt").read().split('\n'))
+tqdm.pandas()
+data["prep_sent"] = data.text.progress_apply(clean_text)
+
 
 # topic modeling
 # removing URLs, user handles, and emojis (maybe not).
+from tqdm import tqdm
+import re
 def remove_mentions_and_links(text):
+    text = text.replace('\n', ' ').replace('\r', ' ').replace('\t', ' ')   
     new_text = []
     for t in text.split(" "):
         t = "" if (t.startswith('@')) and len(t) > 1 else t
@@ -133,14 +148,12 @@ def remove_mentions_and_links(text):
 
     new_text = re.sub(r'http\S+', '', " ".join(new_text))
     return new_text
-from tqdm import tqdm
-import re
 # from tqdm.auto import tqdm  # for notebooks
 # from tqdm.notebook import tqdm
 # Create new `pandas` methods which use `tqdm` progress (can use tqdm_gui, optional kwargs, etc.)
 tqdm.pandas()
 # Now you can use `progress_apply` instead of `apply`
-data["prep"] = data.text.progress_apply(remove_mentions_and_links)
+data["prep_topic"] = data.text.progress_apply(remove_mentions_and_links)
 data = data.reset_index(drop=True)
 
 
@@ -191,6 +204,43 @@ def basic_preprocessing(texts):
     return texts
 data.prep = basic_preprocessing(data.prep)
 data.prep = data.prep.str.replace("chatgpt","")
+
+
+
+
+
+# location data
+import matplotlib.pyplot as plt
+import seaborn as sns
+import ast
+from tqdm import tqdm
+%matplotlib inline
+sns.set(font_scale=1.5, style = 'whitegrid', color_codes=True)
+import time
+import os
+import pickle
+import concurrent.futures
+from geopy.geocoders import Nominatim
+
+#create a geolocation object
+locator = Nominatim(user_agent = 'myGeocoder22')
+loc = locator.geocode(data['user_location'][228])
+print(loc.raw['display_name'].split(',')[-1].strip())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
