@@ -8,8 +8,8 @@ This is a temporary script file.
 import pandas as pd
 import numpy as np
 import string
-from datasketch import MinHash, LeanMinHash
-import xxhash
+#from datasketch import MinHash, LeanMinHash
+#import xxhash
 from tqdm import tqdm
 
 data = pd.read_csv('C:/Users/Poom/Desktop/tweets_v172_cleaned.csv')
